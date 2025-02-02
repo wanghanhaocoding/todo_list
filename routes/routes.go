@@ -17,10 +17,10 @@ func NewRouter() *gin.Engine {
 		//用户操作
 		v1.POST("user/register", api.UserRegister)
 		v1.POST("user/login", api.UserLogin)
-		authed := v1.Group("auth")
+		authed := v1.Group("/")
 		authed.Use(middleware.JWT())
 		{
-
+			authed.POST("task", api.CreateTask)
 		}
 	}
 	return r
