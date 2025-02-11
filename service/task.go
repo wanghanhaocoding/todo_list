@@ -18,6 +18,12 @@ type ShowTaskService struct {
 	Status  int    `json:"status" form:"status"` //0是未做，1是已做
 }
 
+type ListTaskService struct {
+	PageNum  int `json:"page_num" form:"page_num"`
+	PageSize int `json:"page_size" form:"page_size"`
+}
+
+// 新增一条备忘录
 func (service *CreateTaskService) Create(id uint) serializer.Response {
 	var user model.User
 	code := 200
@@ -45,6 +51,7 @@ func (service *CreateTaskService) Create(id uint) serializer.Response {
 	}
 }
 
+// 获取一条备忘录
 func (service *ShowTaskService) Show(tid string) serializer.Response {
 	var task model.Task
 	code := 200
@@ -60,4 +67,16 @@ func (service *ShowTaskService) Show(tid string) serializer.Response {
 		Status: code,
 		Data:   serializer.BuildTask(task),
 	}
+}
+
+// 获取用户下全部备忘录
+func (service *ListTaskService) List(uid uint) serializer.Response {
+	var tasks []model.Task
+	count := 0
+	if service.PageSize == 0 {
+		service.PageSize = 15
+	}
+	model.DB.Model(&model.Task{}).Preload("User").Where("uid = ?", uid).Count(&count).
+		Limit(service.PageSize).Offset((service.PageNum - 1) * service.PageSize).Find(&tasks)
+	return serializer.BuildListResponse(serializer.BuildTasks(tasks), (uint(count)))
 }
