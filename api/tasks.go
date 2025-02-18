@@ -64,3 +64,14 @@ func SearchTask(c *gin.Context) {
 		c.JSON(200, res)
 	}
 }
+
+func DeleteTask(c *gin.Context) {
+	var deleteTask service.DeleteTaskService
+	if err := c.ShouldBind(&deleteTask); err != nil {
+		logging.Error(err)
+		c.JSON(400, err)
+	} else {
+		res := deleteTask.Delete(c.Param("id"))
+		c.JSON(200, res)
+	}
+}
