@@ -29,6 +29,12 @@ type UpdateTaskService struct {
 	Status  int    `json:"status" form:"status"` //0是未做，1是已做
 }
 
+type SearchTaskService struct {
+	Info     string `json:"info" form:"info"`
+	PageNum  int    `json:"page_num" form:"page_num"`
+	PageSize int    `json:"page_size" form:"page_size"`
+}
+
 // 新增一条备忘录
 func (service *CreateTaskService) Create(id uint) serializer.Response {
 	var user model.User
@@ -100,5 +106,17 @@ func (service *UpdateTaskService) Update(tid string) serializer.Response {
 		Data:   serializer.BuildTask(task),
 		Msg:    "更新完成",
 	}
+}
 
+// 查询备忘录
+func (service *SearchTaskService) Search(uid uint) serializer.Response {
+	var tasks []model.Task
+	count := 0
+	if service.PageSize == 0 {
+		service.PageSize = 10
+	}
+	model.DB.Model(&model.Task{}).Preload("User").Where("uid = ?", uid).
+		Where("title LIKE ? OR content LIKE ?", "%"+service.Info+"%", "%"+service.Info+"%").
+		Count(&count).Limit(service.PageSize).Offset((service.PageNum - 1) * service.PageSize).Find(&tasks)
+	return serializer.BuildListResponse(serializer.BuildTasks(tasks), (uint(count)))
 }
